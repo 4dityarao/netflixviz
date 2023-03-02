@@ -13,7 +13,12 @@ class App extends React.Component {
     const canvas = this.canvasRef.current;
     const config = {
       simulation: {
-        repulsion: 0.5,
+        //repulsion: 2,
+        // linkDistance: 1,
+       // linkSpring: 2,
+        repulsion: 0.2,
+        gravity: 0.1,
+        decay: 1000
       },
       renderLinks: true,
       linkColor: (link) => link.color,
@@ -26,7 +31,20 @@ class App extends React.Component {
       linkArrows: false,
       events: {
         onClick: (node) => {
+          if (node!== undefined){
           console.log('Clicked node: ', node);
+         
+          }
+          graph.pause();
+
+        },
+        onNodeMouseOver: (node)=>{
+            console.log('Hovered node: ', node);
+           
+        
+        },
+        onmousemove: ()=>{
+          graph.fitView();
         },
       },
       /* ... */
@@ -35,10 +53,15 @@ class App extends React.Component {
     console.log(data)
     const graph = new Graph(canvas, config);
     graph.setData(data.nodes, data.links);
+    graph.fitView();
   }
 
   render() {
-    return <canvas ref={this.canvasRef} />;
+    return (
+      <div><h1>Netflix Prize Data</h1>
+    
+    <canvas ref={this.canvasRef} /*width = {390} height = {1732}*/ />
+    </div>);
   }
 }
 
