@@ -1,6 +1,6 @@
 import React from 'react';
 import './Sidebar.css';
-import { Drawer } from '@mui/material';
+import { Drawer, Select, MenuItem, Button} from '@mui/material';
 
 class Sidebar extends React.Component 
 {
@@ -36,6 +36,12 @@ constructor(props){
 
       <div>
         <center><h1>Sidebar Content</h1>
+        <Select sx = {{"minWidth": 120, "bgcolor": "grey"}}>
+          <MenuItem value="option1">Initial Ratings</MenuItem>
+          <MenuItem value="rec1">Recommender System 1</MenuItem>
+          <MenuItem value="rec2">Recommender System 2</MenuItem>
+</Select>
+<Button variant="contained" sx={{"color":"white"}}>Snaids</Button>
         <div class = "nodedata">id: {this.state.node.id}
         neighbors : {this.state.neighbors}
         </div>
