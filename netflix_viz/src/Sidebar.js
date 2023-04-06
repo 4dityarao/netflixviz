@@ -6,7 +6,7 @@ class Sidebar extends React.Component
 {
 constructor(props){
   super(props);
-  this.state = {id:-1};
+  this.state = {node:{}};
 }
 
  render(){ 
@@ -36,7 +36,9 @@ constructor(props){
 
       <div>
         <center><h1>Sidebar Content</h1>
-        <div class = "nodedata">{this.state.id}</div>
+        <div class = "nodedata">id: {this.state.node.id}
+        neighbors : {this.state.neighbors}
+        </div>
         </center>
       </div>
     </Drawer>
@@ -44,7 +46,7 @@ constructor(props){
 };
 changeState(x){
   console.log(x);
-  this.state = x;
+  this.setState({node: x, neighbors: [1,2,3]});
   //render();
 
 }
