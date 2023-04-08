@@ -14,8 +14,10 @@ class App extends React.Component {
       node_id: -1,
       node_neighbors: {},
     };
+   
     this.canvasRef = React.createRef();
     this.sidebarRef = React.createRef();
+    
     // this.driver = neo4j.driver(
     //   process.env.NEO4J_URI || 'bolt://localhost:7687',
     //   neo4j.auth.basic(
@@ -57,7 +59,8 @@ class App extends React.Component {
         onClick: (node) => {
           if (node!== undefined){
           // console.log('Clicked node: ', node);
-          this.sidebarRef.current.changeState(node)
+          //console.log(graph.getAdjacentNodes(node.id));
+          this.sidebarRef.current.changeNodeData(node, graph.getAdjacentNodes(node.id).slice(1))
           // this.state.node_id = node.id;
     
           console.log(this.state.node_id);
@@ -74,6 +77,7 @@ class App extends React.Component {
           graph.fitView();
         },
       },
+      
       /* ... */
     };
 
@@ -105,7 +109,7 @@ class App extends React.Component {
     // graph.setData(nodes, links);
     const data1 = require("./assets/graph_data_poc.json")
     graph.setData(data1.nodes,data1.links);
-
+    graph = this.graph.bind(this)
     graph.fitView();
   }
 
@@ -118,10 +122,15 @@ render(){
       <div id = "container"><h1>Netflix Prize Data</h1>
    
     <canvas class = "graph" ref={this.canvasRef}/>
-    <Sidebar ref = {this.sidebarRef} data = {this.state}></Sidebar>
+    <Sidebar queryToParent = {this.getQuery} ref = {this.sidebarRef} data = {this.state}></Sidebar>
     </div>
     
     );
+  }
+  getQuery(value){
+    console.log("Run query with :", value)
+    // const data = require("./assets/nodes_only.json")
+    // this.graph.setData(data.nodes,data.links)
   }
 }
 
