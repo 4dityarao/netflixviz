@@ -101,10 +101,8 @@ AND m.id < 300
 RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating, toString(m.title) as title` )=>{
 
   let  session = await this.driver.session({database:"neo4j"});
-
   let res  = await session.run(query);
   session.close();
-  console.log(res);
   let nodes = new Set();
   let links = res.records.map(r => {
     //group 1 = movie, 2= cust
@@ -122,10 +120,22 @@ RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating, to
 
 
 
-getQuery = (value)=>{
-  console.log("Run query with :", value)
-  const data = require("./assets/graph_data_poc.json")
-  this.graph.setData(data.nodes,data.links)
+getQuery = async (value = "init")=>{
+
+  const query_dict = {
+    init: `MATCH (c:Customer)-[r]-(m:Movie)
+             WHERE c.id < 300000 
+             AND m.id < 300
+             RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating, toString(m.title) as title`,
+    rec1 : `MATCH (c:Customer)-[r:PREDICTED_RATING]-(m:Movie)
+            RETURN toString(m.id) as target,toString(c.id) as source, r.predicted_rating as rating, toString(m.title) as title LIMIT 30000`,
+    rec2:``
+
+  };
+
+  
+  const [nodes, links] =await  this.runQuery(eval(`query_dict.${value}`))
+  this.graph.setData(nodes,links)
 };
 
 render(){
