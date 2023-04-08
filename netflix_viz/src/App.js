@@ -17,7 +17,7 @@ class App extends React.Component {
    
     this.canvasRef = React.createRef();
     this.sidebarRef = React.createRef();
-    
+    this.graph = null;
     this.driver = neo4j.driver(
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
@@ -60,12 +60,12 @@ class App extends React.Component {
           if (node!== undefined){
           // console.log('Clicked node: ', node);
           //console.log(graph.getAdjacentNodes(node.id));
-          this.sidebarRef.current.changeNodeData(node, graph.getAdjacentNodes(node.id).slice(1))
+          this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
           // this.state.node_id = node.id;
     
           console.log(this.state.node_id);
           }
-          graph.pause();
+          this.graph.pause();
 
         },
         onNodeMouseOver: (node)=>{
@@ -74,41 +74,59 @@ class App extends React.Component {
         
         },
         onmousemove: ()=>{
-          graph.fitView();
+          this.graph.fitView();
         },
       },
       
       /* ... */
     };
 
-    let  session = await this.driver.session({database:"neo4j"});
-
-    let res  = await session.run(`MATCH (c:Customer)-[r]-(m:Movie)
-    WHERE c.id < 3000000 
-    AND m.id < 300
-    RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating`)
-    
-
-    session.close();
-    console.log(res);
-    let nodes = new Set();
-    let links = res.records.map(r => {
-      let source = {"group":1, "id":parseInt(r.get("source"))};
-      
-      let target ={"group":2, "id": parseInt(r.get("target"))};
-      nodes.add(source);
-      nodes.add(target);
-      return {"source":source.id,"target":  target.id,value:parseInt(r.get("rating"))}});
-    
-    nodes = Array.from(nodes);
-    const graph = new Graph(canvas, config);
-    graph.setData(nodes, links);
+    this.graph = new Graph(canvas, config);
+    const [nodes,links] = await this.runQuery();
+    this.graph.setData(nodes, links);
     //to run with POC data
     // const data1 = require("./assets/graph_data_poc.json")
     // graph.setData(data1.nodes,data1.links);
     //graph = this.graph.bind(this)
-    graph.fitView();
-  }
+    this.graph.fitView();
+  };
+
+
+
+
+
+runQuery = async(query =`MATCH (c:Customer)-[r]-(m:Movie)
+WHERE c.id < 300000 
+AND m.id < 300
+RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating, toString(m.title) as title` )=>{
+
+  let  session = await this.driver.session({database:"neo4j"});
+
+  let res  = await session.run(query);
+  session.close();
+  console.log(res);
+  let nodes = new Set();
+  let links = res.records.map(r => {
+    //group 1 = movie, 2= cust
+    let source = {"group":2, "id":r.get("source"),};
+    
+    let target ={"group":1, "id": r.get("target"), "title": r.get("title")};
+    nodes.add(source);
+    nodes.add(target);
+    return {"source":source.id,"target":  target.id,value:parseInt(r.get("rating"))}});
+  
+  nodes = Array.from(nodes);
+  return [nodes,links]
+};
+
+
+
+
+getQuery = (value)=>{
+  console.log("Run query with :", value)
+  const data = require("./assets/graph_data_poc.json")
+  this.graph.setData(data.nodes,data.links)
+};
 
 render(){
   
@@ -124,11 +142,7 @@ render(){
     
     );
   }
-  getQuery(value){
-    console.log("Run query with :", value)
-    // const data = require("./assets/nodes_only.json")
-    // this.graph.setData(data.nodes,data.links)
-  }
+ 
 }
 
 export default App;

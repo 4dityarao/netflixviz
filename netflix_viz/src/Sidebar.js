@@ -50,6 +50,10 @@ constructor(props){
       <Typography variant="h5" component="div">
         {this.state.node.id}
       </Typography>
+      
+      <Typography variant="h6" component="div">
+        {this.state.node.title}
+      </Typography>
       <Typography variant="h6" component="div">
         Neighbors
         {this.state.neighbors.map(item=>{return <li>{item}</li>})}
@@ -63,7 +67,7 @@ constructor(props){
   );
 };
 changeNodeData(x, neighbors){
-
+  console.log(x)
   this.setState({"node": x, "neighbors":neighbors.map((x)=>x.id ).slice(0,10)});
   //render();
 
