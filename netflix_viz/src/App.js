@@ -18,17 +18,17 @@ class App extends React.Component {
     this.canvasRef = React.createRef();
     this.sidebarRef = React.createRef();
     
-    // this.driver = neo4j.driver(
-    //   process.env.NEO4J_URI || 'bolt://localhost:7687',
-    //   neo4j.auth.basic(
-    //     process.env.NEO4J_USER || 'neo4j',
-    //     process.env.NEO4J_PASSWORD || 'qwerty123'
-    //   ),
-    //   {
-    //     encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
-    //   }
-    // )
-    // console.log(this.driver);
+    this.driver = neo4j.driver(
+      process.env.NEO4J_URI || 'bolt://localhost:7687',
+      neo4j.auth.basic(
+        process.env.NEO4J_USER || 'neo4j',
+        process.env.NEO4J_PASSWORD || 'qwerty123'
+      ),
+      {
+        encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
+      }
+    )
+    console.log(this.driver);
   }
 
   componentDidMount = async()=> {
@@ -81,35 +81,32 @@ class App extends React.Component {
       /* ... */
     };
 
-    // let  session = await this.driver.session({database:"neo4j"});
+    let  session = await this.driver.session({database:"neo4j"});
 
-    // let res  = await session.run(`MATCH (c:Customer)-[r]-(m:Movie)
-    // WHERE c.id < 3000000 
-    // AND m.id < 300
-    // RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating`)
+    let res  = await session.run(`MATCH (c:Customer)-[r]-(m:Movie)
+    WHERE c.id < 3000000 
+    AND m.id < 300
+    RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating`)
     
 
-    // session.close();
-    //console.log(res);
-    // let nodes = new Set();
-    // let links = res.records.map(r => {
-    //   let source = {"group":1, "id":parseInt(r.get("source"))};
+    session.close();
+    console.log(res);
+    let nodes = new Set();
+    let links = res.records.map(r => {
+      let source = {"group":1, "id":parseInt(r.get("source"))};
       
-    //   let target ={"group":2, "id": parseInt(r.get("target"))};
-    //   nodes.add(source);
-    //   nodes.add(target);
-    //   return {"source":source.id,"target":  target.id,value:parseInt(r.get("rating"))}});
+      let target ={"group":2, "id": parseInt(r.get("target"))};
+      nodes.add(source);
+      nodes.add(target);
+      return {"source":source.id,"target":  target.id,value:parseInt(r.get("rating"))}});
     
-    // nodes = Array.from(nodes);
-    //console.log(nodes);
-    //console.log(nodes);
-    // this.setState({ data : {nodes, links}});
-    //console.log(data1);
+    nodes = Array.from(nodes);
     const graph = new Graph(canvas, config);
-    // graph.setData(nodes, links);
-    const data1 = require("./assets/graph_data_poc.json")
-    graph.setData(data1.nodes,data1.links);
-    graph = this.graph.bind(this)
+    graph.setData(nodes, links);
+    //to run with POC data
+    // const data1 = require("./assets/graph_data_poc.json")
+    // graph.setData(data1.nodes,data1.links);
+    //graph = this.graph.bind(this)
     graph.fitView();
   }
 
