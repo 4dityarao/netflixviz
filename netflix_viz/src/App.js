@@ -10,25 +10,24 @@ class App extends React.Component {
   constructor(props) {
     
     super(props);
-    this.state = {
-      node_id: -1,
-      node_neighbors: {},
-    };
-   
     this.canvasRef = React.createRef();
     this.sidebarRef = React.createRef();
-    this.graph = null;
+    
     this.driver = neo4j.driver(
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'qwerty123'
+        process.env.NEO4J_PASSWORD || 'password'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
       }
     )
-    console.log(this.driver);
+
+
+    this.nodes = null;
+    this.links = null;
+    this.graph = null;
   }
 
   componentDidMount = async()=> {
@@ -63,7 +62,7 @@ class App extends React.Component {
           this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
           // this.state.node_id = node.id;
     
-          console.log(this.state.node_id);
+       
           }
           this.graph.pause();
 
@@ -82,8 +81,8 @@ class App extends React.Component {
     };
 
     this.graph = new Graph(canvas, config);
-    const [nodes,links] = await this.runQuery();
-    this.graph.setData(nodes, links);
+    [this.nodes,this.links] = await this.runQuery();
+    this.graph.setData(this.nodes,this.links);
     //to run with POC data
     // const data1 = require("./assets/graph_data_poc.json")
     // graph.setData(data1.nodes,data1.links);
@@ -95,25 +94,30 @@ class App extends React.Component {
 
 
 
-runQuery = async(query =`MATCH (c:Customer)-[r]-(m:Movie)
-WHERE c.id < 300000 
-AND m.id < 300
-RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating, toString(m.title) as title` )=>{
+runQuery = async(query =`MATCH (m:Movie)
+                          CALL {
+                              WITH m
+                              with distinct m as movs
+                              MATCH (c:Customer)-[r]-(movs)
+                          RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 10
+                          }
+return source,target,rating,title` )=>{
 
-  let  session = await this.driver.session({database:"neo4j"});
+  let  session = await this.driver.session({database:"moviedb"});
   let res  = await session.run(query);
   session.close();
-  let nodes = new Set();
+  //let movies = new Set()
+  let movies = new Object();
+  let custs = new Set();
   let links = res.records.map(r => {
     //group 1 = movie, 2= cust
-    let source = {"group":2, "id":r.get("source"),};
-    
-    let target ={"group":1, "id": r.get("target"), "title": r.get("title")};
-    nodes.add(source);
-    nodes.add(target);
-    return {"source":source.id,"target":  target.id,value:parseInt(r.get("rating"))}});
+    movies[r.get("target")] = r.get("title");
+    //movies.add(r.get("target"))
+    custs.add(r.get("source"));
+    return {"source":r.get("source"),"target":  r.get("target"),value:parseInt(r.get("rating"))}});
   
-  nodes = Array.from(nodes);
+  let nodes = Array.from(Object.entries(movies)).map(([id,title]) =>{return {id: id,title:title, group:1}})
+                .concat(Array.from(custs).map(x=>{return {id: x, group:2}}))
   return [nodes,links]
 };
 
@@ -121,27 +125,34 @@ RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating, to
 
 
 getQuery = async (value = "init")=>{
-
+  let n  =  this.nodes.filter(x=>x.group>1).map(x=>{return x.id})
+  console.log(n)
   const query_dict = {
-    init: `MATCH (c:Customer)-[r]-(m:Movie)
-             WHERE c.id < 300000 
-             AND m.id < 300
-             RETURN toString(m.id) as target,toString(c.id) as source, r.rating as rating, toString(m.title) as title`,
-    rec1 : `MATCH (c:Customer)-[r:PREDICTED_RATING]-(m:Movie)
-            RETURN toString(m.id) as target,toString(c.id) as source, r.predicted_rating as rating, toString(m.title) as title LIMIT 30000`,
+    init: `MATCH (m:Movie)
+    CALL {
+        WITH m
+        with distinct m as movs
+        MATCH (c:Customer)-[r]-(movs)
+    RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 10
+    }
+return source,target,rating,title`,
+    rec1: `MATCH (c:Customer)-[r:PREDICTED_RATING]-(movs)
+    where c.id in [${ this.nodes.filter(x=>x.group>1).map(x=>{return x.id})}]
+        RETURN toString(movs.id) as target,toString(c.id) as source, r.predicted_rating as rating, toString(movs.title) as title`,
+    // rec1 : `MATCH (c:Customer)-[r:PREDICTED_RATING]-(m:Movie)
+    //         RETURN toString(m.id) as target,toString(c.id) as source, r.predicted_rating as rating, toString(m.title) as title LIMIT 30000`,
     rec2:``
 
   };
 
   
-  const [nodes, links] =await  this.runQuery(eval(`query_dict.${value}`))
-  this.graph.setData(nodes,links)
+ [this.nodes, this.links] =await  this.runQuery(eval(`query_dict.${value}`),)
+  this.graph.setData(this.nodes,this.links)
 };
 
 render(){
   
-    // this.loadData();
-    console.log("Didnt Wait")
+
     return (
       
       <div id = "container"><h1>Netflix Prize Data</h1>
