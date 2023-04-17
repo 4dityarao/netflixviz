@@ -1,6 +1,7 @@
 import React from 'react';
 import './Sidebar.css';
-import { Drawer, Select, MenuItem, Button,Card,Typography, Box} from '@mui/material';
+//import { Drawer, Select, MenuItem, Button,Card,Typography, Box} from '@mui/material';
+import { Drawer, Select, MenuItem, Button, Card, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 class Sidebar extends React.Component 
 {
@@ -12,7 +13,6 @@ constructor(props){
  render(){ 
   return (
     <Drawer
-   
     variant="temporary"
     open = "true"
     anchor="left"
@@ -35,7 +35,6 @@ constructor(props){
     >
 
       <div>
-        
         <center><img style = {{height: 100, width: 100 }}src = {require("./assets/logo.gif")}></img></center>
         <center><h1>Netflix Prize Recommendations</h1>
         <Select label = "select graph.." default = 'init'sx = {{"minWidth": 120,"bgcolor": "grey"}} onChange = {this.sendQuery} >
@@ -54,9 +53,24 @@ constructor(props){
       <Typography variant="h6" component="div">
         {this.state.node.title}
       </Typography>
-      <Typography variant="h6" component="div">
+      <Typography variant="h6" component="div" sx={{ color: "white" }}>
         Neighbors
-        {this.state.neighbors.map(item=>{return <li>{item}</li>})}
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ color: "white" }}>Customer ID</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {this.state.neighbors.map(item => (
+                  <TableRow key={item}>
+                    <TableCell sx={{ color: "white" }}>{item}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
       </Typography>
       </Card>
       </Box>
