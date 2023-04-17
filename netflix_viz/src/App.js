@@ -17,7 +17,7 @@ class App extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'password'
+        process.env.NEO4J_PASSWORD || 'qwerty123'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -51,14 +51,18 @@ class App extends React.Component {
         return "#f54e42"
       }
       },
-      nodeSize: 0.5,
-      linkWidth: 0.1,
+      nodeSize: (node)=>{if(node.group==1){return 1}else{return 0.5}},
+      linkWidth: 0.8,
       linkArrows: false,
+      linkVisibilityDistanceRange : [100, 1500],
+      linkVisibilityMinTransparency : 0.05,
+      scaleNodesOnZoom : true,
       events: {
         onClick: (node) => {
           if (node!== undefined){
           // console.log('Clicked node: ', node);
           //console.log(graph.getAdjacentNodes(node.id));
+          this.graph.selectNodeById(node.id,true);
           this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
           // this.state.node_id = node.id;
     
@@ -103,7 +107,7 @@ runQuery = async(query =`MATCH (m:Movie)
                           }
 return source,target,rating,title` )=>{
 
-  let  session = await this.driver.session({database:"moviedb"});
+  let  session = await this.driver.session({database:"neo4j"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()
