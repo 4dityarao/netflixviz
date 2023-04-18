@@ -58,15 +58,14 @@ class App extends React.Component {
       linkVisibilityMinTransparency : 0.05,
       scaleNodesOnZoom : true,
       events: {
-        onClick: (node) => {
+        onClick: async (node) => {
           if (node!== undefined){
           // console.log('Clicked node: ', node);
           //console.log(graph.getAdjacentNodes(node.id));
           this.graph.selectNodeById(node.id,true);
           this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
-          // this.state.node_id = node.id;
-    
-       
+          // this.state.node_id = node.id;  
+          await this.getFusedView(node)     
           }
           this.graph.pause();
 
@@ -125,6 +124,31 @@ return source,target,rating,title` )=>{
   return [nodes,links]
 };
 
+runMovQuery = async(query =`MATCH (m:Movie)
+                          CALL {
+                              WITH m
+                              with distinct m as movs
+                              MATCH (c:Customer)-[r]-(movs)
+                          RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 10
+                          }
+return source,target,rating,title` )=>{
+
+  let  session = await this.driver.session({database:"moviedb"});
+  let res  = await session.run(query);
+  session.close();
+  //let movies = new Set()
+  let movies = new Object();
+  let links = res.records.map(r => {
+    //group 1 = movie, 2= cust
+    movies[r.get("movie2")] = r.get("movie2");
+    //movies.add(r.get("target"))
+    movies[r.get("movie1")] = r.get("movie1");
+    return {"source":r.get("movie1"),"target":  r.get("movie2"),value:parseFloat(r.get("sim"))}});
+  
+  let nodes = Array.from(Object.entries(movies)).map(([id,title]) =>{return {id: id,title:title, group:1}})
+              
+  return [nodes,links]
+};
 
 
 
@@ -159,6 +183,19 @@ highlightGraphNode = (node_id)=>{
  
    this.graph.selectNodeById(node_id,true)
    this.graph.zoomToNodeById(node_id,700,30)
+}
+
+getFusedView = async (node)=>{
+  let [movienodes, simlinks] = await this.runMovQuery(`match (c:Customer{id:${node.id}})-[r:RATED]-(m)
+with distinct m as m1
+MATCH (m1:Movie)-[r:similarity]-(m2:Movie)
+RETURN m1.id as movie1, m2.id as movie2, r.similarity as sim`)
+let usermovs = this.graph.getAdjacentNodes(node.id)
+let x = Array.from(movienodes.map(x=>{return x.id}).concat(usermovs))
+this.graph.selectNodesByIds(x)
+console.log(usermovs)
+
+
 }
 render(){
   
