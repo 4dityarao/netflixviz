@@ -17,7 +17,7 @@ class App extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'qwerty123'
+        process.env.NEO4J_PASSWORD || 'password'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -107,7 +107,7 @@ runQuery = async(query =`MATCH (m:Movie)
                           }
 return source,target,rating,title` )=>{
 
-  let  session = await this.driver.session({database:"neo4j"});
+  let  session = await this.driver.session({database:"moviedb"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()
@@ -137,6 +137,7 @@ getQuery = async (value = "init")=>{
         WITH m
         with distinct m as movs
         MATCH (c:Customer)-[r]-(movs)
+        WITH 
     RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 10
     }
 return source,target,rating,title`,
@@ -154,6 +155,11 @@ return source,target,rating,title`,
   this.graph.setData(this.nodes,this.links)
 };
 
+highlightGraphNode = (node_id)=>{
+ 
+   this.graph.selectNodeById(node_id,true)
+   this.graph.zoomToNodeById(node_id,700,30)
+}
 render(){
   
 
@@ -162,7 +168,7 @@ render(){
       <div id = "container"><h1>Netflix Prize Data</h1>
    
     <canvas class = "graph" ref={this.canvasRef}/>
-    <Sidebar queryToParent = {this.getQuery} ref = {this.sidebarRef} data = {this.state}></Sidebar>
+    <Sidebar highlightNode={this.highlightGraphNode} queryToParent = {this.getQuery} ref = {this.sidebarRef} data = {this.state}></Sidebar>
     </div>
     
     );

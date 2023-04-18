@@ -65,7 +65,7 @@ constructor(props){
               <TableBody>
                 {this.state.neighbors.map(item => (
                   <TableRow key={item}>
-                    <TableCell sx={{ color: "white" }}>{item}</TableCell>
+                    <TableCell sx={{ color: "white" }} onClick = { this.highlight}>{item}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -90,6 +90,10 @@ sendQuery = (event)=>{
   //console.log(event.target.value);
   this.props.queryToParent(event.target.value)
   
+};
+highlight= (item)=>{
+  let x = item.currentTarget.innerHTML;
+  this.props.highlightNode(x);
 }
 }
 export default Sidebar;
