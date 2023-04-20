@@ -1,19 +1,16 @@
 import logo from './logo.svg';
 import React, { useState } from 'react';
-import './App.css';
+import './childGraph.css';
 import Sidebar from './Sidebar';
-import ChildGraph from './childGraph';
 import { Graph, GraphConfigInterface } from "@cosmograph/cosmos";
 import * as neo4j from  'neo4j-driver';
 
-class App extends React.Component {
+class ChildGraph extends React.Component {
   
   constructor(props) {
     
     super(props);
     this.canvasRef = React.createRef();
-    this.sidebarRef = React.createRef();
-    this.childGraphRef = React.createRef();
     
     this.driver = neo4j.driver(
       process.env.NEO4J_URI || 'bolt://localhost:7687',
@@ -49,9 +46,9 @@ class App extends React.Component {
       return "#c5fb61"
       else return "#f54e42"
       },
-      nodeColor: (node) => {if(node.group>1){
+      nodeColor: (node) => {
         return "#f54e42"
-      }
+      
       },
       nodeSize: (node)=>{if(node.group==1){return 1}else{return 0.5}},
       linkWidth: 0.8,
@@ -60,14 +57,13 @@ class App extends React.Component {
       linkVisibilityMinTransparency : 0.05,
       scaleNodesOnZoom : true,
       events: {
-        onClick:  (node) => {
+        onClick: async (node) => {
           if (node!== undefined){
           // console.log('Clicked node: ', node);
           //console.log(graph.getAdjacentNodes(node.id));
           this.graph.selectNodeById(node.id,true);
-          this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
-          // this.state.node_id = node.id;  
-          this.childGraphRef.current.makeView(node, this.graph.getAdjacentNodes(node.id)) 
+                  // this.state.node_id = node.id;  
+          await this.getFusedView(node)     
           }
           this.graph.pause();
 
@@ -85,12 +81,12 @@ class App extends React.Component {
     };
 
     this.graph = new Graph(canvas, config);
-    [this.nodes,this.links] = await this.runQuery();
-    this.graph.setData(this.nodes,this.links);
+    // [this.nodes,this.links] = await this.runQuery();
+    // this.graph.setData(this.nodes,this.links);
     //to run with POC data
-    // const data1 = require("./assets/graph_data_poc.json")
-    // graph.setData(data1.nodes,data1.links);
-    //graph = this.graph.bind(this)
+    const data1 = require("./assets/graph_data_poc.json")
+    this.graph.setData(data1.nodes,data1.links);
+
     this.graph.fitView();
   };
 
@@ -179,27 +175,32 @@ highlightGraphNode = (node_id)=>{
    this.graph.zoomToNodeById(node_id,700,30)
 }
 
-
+makeView = async(node, adjacent_nodes)=>{
+  let [movienodes, simlinks] = await this.runMovQuery(`match (c:Customer{id:${node.id}})-[r:RATED]-(m)
+with distinct m as m1
+match (:Customer{id:785314})-[p:PREDICTED_RATING]-(pred_movie:Movie)
+with distinct pred_movie as m2
+MATCH (m2:Movie)-[r:similarity]-(m1:Movie)
+RETURN m1.id as movie1, m2.id as movie2, r.similarity as sim order by r.similarity desc `)
+let x = movienodes.concat(adjacent_nodes)
+console.log(x)
+this.graph.setData(Array.from([{id: '14670', title: "", group: 1}]),[])
+console.log("YAY")
+}
 render(){
   
-
+    console.log("YEEEET")
     return (
+      
       <div>
-      <div id = "container">
    
     <canvas class = "graph" ref={this.canvasRef}/>
+
     </div>
-    <div class = "childgraph">
-    <ChildGraph ref = {this.childGraphRef}/>
-    </div>
-    
-    <Sidebar highlightNode={this.highlightGraphNode} queryToParent = {this.getQuery} ref = {this.sidebarRef} data = {this.state}></Sidebar> 
-    </div>
-    
     
     );
   }
  
 }
 
-export default App;
+export default ChildGraph;

@@ -59,19 +59,9 @@ h1{
   background-color: #fff8f800;
 }
 #container{
-  display: flex;
-  flex-direction: column;
-  z-index: 0;
-}
-.childgraph{
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 40%;
-  height:40%;
-  z-index: 1;
-  border: solid blue;
-  background-color: #61dafb;
+  /* display: flex;
+  flex-direction: column; */
+  position: relative;
 }
 .nodedata{
   color: #61dafb
