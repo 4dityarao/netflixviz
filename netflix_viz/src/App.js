@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import React, { useState } from 'react';
 import './App.css';
 import Sidebar from './Sidebar';
@@ -19,7 +18,7 @@ class App extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'password'
+        process.env.NEO4J_PASSWORD || 'qwerty123'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -62,11 +61,8 @@ class App extends React.Component {
       events: {
         onClick:  (node) => {
           if (node!== undefined){
-          // console.log('Clicked node: ', node);
-          //console.log(graph.getAdjacentNodes(node.id));
           this.graph.selectNodeById(node.id,true);
-          this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
-          // this.state.node_id = node.id;  
+          this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1)) 
           this.childGraphRef.current.makeView(node, this.graph.getAdjacentNodes(node.id)) 
           }
           this.graph.pause();
@@ -107,7 +103,7 @@ runQuery = async(query =`MATCH (m:Movie)
                           }
 return source,target,rating,title` )=>{
 
-  let  session = await this.driver.session({database:"moviedb"});
+  let  session = await this.driver.session({database:"neo4j"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()
@@ -124,26 +120,6 @@ return source,target,rating,title` )=>{
                 .concat(Array.from(custs).map(x=>{return {id: x, group:2}}))
   return [nodes,links]
 };
-
-runMovQuery = async(query)=>{
-
-  let  session = await this.driver.session({database:"moviedb"});
-  let res  = await session.run(query);
-  session.close();
-  //let movies = new Set()
-  let movies = new Object();
-  let links = res.records.map(r => {
-    //group 1 = movie, 2= cust
-    movies[r.get("movie2")] = r.get("movie2");
-    //movies.add(r.get("target"))
-    movies[r.get("movie1")] = r.get("movie1");
-    return {"source":r.get("movie1"),"target":  r.get("movie2"),value:parseFloat(r.get("sim"))}});
-  
-  let nodes = Array.from(Object.entries(movies)).map(([id,title]) =>{return {id: id,title:title, group:1}})
-              
-  return [nodes,links]
-};
-
 
 
 getQuery = async (value = "init")=>{
@@ -165,7 +141,6 @@ return source,target,rating,title`,
     // rec1 : `MATCH (c:Customer)-[r:PREDICTED_RATING]-(m:Movie)
     //         RETURN toString(m.id) as target,toString(c.id) as source, r.predicted_rating as rating, toString(m.title) as title LIMIT 30000`,
     rec2:``
-
   };
 
   
@@ -181,8 +156,6 @@ highlightGraphNode = (node_id)=>{
 
 
 render(){
-  
-
     return (
       <div>
       <div id = "container">

@@ -1,7 +1,5 @@
-import logo from './logo.svg';
 import React, { useState } from 'react';
 import './childGraph.css';
-import Sidebar from './Sidebar';
 import { Graph, GraphConfigInterface } from "@cosmograph/cosmos";
 import * as neo4j from  'neo4j-driver';
 
@@ -16,7 +14,7 @@ class ChildGraph extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'password'
+        process.env.NEO4J_PASSWORD || 'qwerty123'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -34,9 +32,6 @@ class ChildGraph extends React.Component {
     const canvas = this.canvasRef.current;
     const config = {
       simulation: {
-        //repulsion: 2,
-        // linkDistance: 1,
-       // linkSpring: 2,
         repulsion: 0.2,
         gravity: 0.1,
         decay: 1000
@@ -57,18 +52,13 @@ class ChildGraph extends React.Component {
         linkVisibilityMinTransparency : 0.05,
         scaleNodesOnZoom : true,
         events: {
-          onClick:  (node) => {
-            if (node!== undefined){
-            // console.log('Clicked node: ', node);
-            //console.log(graph.getAdjacentNodes(node.id));
-            this.graph.selectNodeById(node.id,true);
-            this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
-            // this.state.node_id = node.id;  
-            this.childGraphRef.current.makeView(node, this.graph.getAdjacentNodes(node.id)) 
-            }
-            this.graph.pause();
-  
-          },
+          // onClick:  (node) => {
+          //   if (node!== undefined){
+          //   this.graph.selectNodeById(node.id,true);        
+          //   this.childGraphRef.current.makeView(node, this.graph.getAdjacentNodes(node.id)) 
+          //   }
+          //   this.graph.pause();
+          // },
           onNodeMouseOver: (node)=>{
               // console.log('Hovered node: ', node);
              
@@ -82,12 +72,6 @@ class ChildGraph extends React.Component {
     };
 
     this.graph = new Graph(canvas, config);
-    // [this.nodes,this.links] = await this.runQuery();
-    // this.graph.setData(this.nodes,this.links);
-    //to run with POC data
-    // const data1 = require("./assets/graph_data_poc.json")
-    // this.graph.setData(data1.nodes,data1.links);
-
     this.graph.fitView();
   };
 
@@ -95,19 +79,10 @@ class ChildGraph extends React.Component {
 
 
 
-runQuery = async(query =`MATCH (m:Movie)
-                          CALL {
-                              WITH m
-                              with distinct m as movs
-                              MATCH (c:Customer)-[r]-(movs)
-                          RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 10
-                          }
-return source,target,rating,title` )=>{
-
-  let  session = await this.driver.session({database:"moviedb"});
+runQuery = async(query)=>{
+  let  session = await this.driver.session({database:"neo4j"});
   let res  = await session.run(query);
   session.close();
-  //let movies = new Set()
   let movies = new Object();
   let custs = new Set();
   let links = res.records.map(r => {
@@ -124,7 +99,7 @@ return source,target,rating,title` )=>{
 
 runMovQuery = async(query)=>{
 
-  let  session = await this.driver.session({database:"moviedb"});
+  let  session = await this.driver.session({database:"neo4j"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()
@@ -146,33 +121,6 @@ runMovQuery = async(query)=>{
 
 
 
-getQuery = async (value = "init")=>{
-  //let n  =  this.nodes.filter(x=>x.group>1).map(x=>{return x.id})
-  //console.log(n)
-  const query_dict = {
-    init: `MATCH (m:Movie)
-    CALL {
-        WITH m
-        with distinct m as movs
-        MATCH (c:Customer)-[r]-(movs)
-        WITH 
-    RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 10
-    }
-return source,target,rating,title`,
-    rec1: `MATCH (c:Customer)-[r:PREDICTED_RATING]-(movs)
-    where c.id in [${ this.nodes.filter(x=>x.group>1).map(x=>{return x.id})}]
-        RETURN toString(movs.id) as target,toString(c.id) as source, r.predicted_rating as rating, toString(movs.title) as title`,
-    // rec1 : `MATCH (c:Customer)-[r:PREDICTED_RATING]-(m:Movie)
-    //         RETURN toString(m.id) as target,toString(c.id) as source, r.predicted_rating as rating, toString(m.title) as title LIMIT 30000`,
-    rec2:``
-
-  };
-
-  
- [this.nodes, this.links] =await  this.runQuery(eval(`query_dict.${value}`),)
-  this.graph.setData(this.nodes,this.links)
-};
-
 highlightGraphNode = (node_id)=>{
  
    this.graph.selectNodeById(node_id,true)
@@ -184,18 +132,16 @@ makeView = async(node, adjacent_nodes)=>{
 with distinct m as m1
 match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
 with distinct pred_movie as m2
-MATCH (m2:Movie)-[r:similarity]-(m1:Movie)
-RETURN toString(m1.id) as movie1, toString(m2.id) as movie2, r.similarity as sim order by r.similarity desc `)
+MATCH (m2:Movie)-[r:sim_rating ]-(m1:Movie)
+RETURN toString(m1.id) as movie1, toString(m2.id) as movie2, r.sim_rating  as sim order by r.sim_rating desc `)
 let x = movienodes.concat(adjacent_nodes)
 console.log(x)
 this.graph.setData(movienodes,simlinks);
-console.log("YAY")
+this.graph.fitView();
 // let [movienodes, simlinks] = await this.runQuery()
 // this.graph.setData(movienodes,simlinks)
 }
 render(){
-  
-    console.log("YEEEET")
     return (
       
       <div>
