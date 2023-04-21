@@ -62,8 +62,16 @@ class App extends React.Component {
         onClick:  (node) => {
           if (node!== undefined){
           this.graph.selectNodeById(node.id,true);
-          this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1)) 
+          this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
+          if(node.group>1){ 
           this.childGraphRef.current.makeView(node, this.graph.getAdjacentNodes(node.id)) 
+          }else{
+            this.childGraphRef.current.reset_graph();
+          }
+          }
+          else{
+            this.graph.unselectNodes();
+            this.childGraphRef.current.reset_graph();
           }
           this.graph.pause();
 

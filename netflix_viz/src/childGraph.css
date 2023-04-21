@@ -71,9 +71,11 @@ h1{
   bottom: 0;
   left: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  width: 25%; /* or any desired width */
+  border-top:1px grey;
+  width: 26%; /* or any desired width */
   height: 27%; /* or any desired height */
   color: white;
   border: 1px solid gray;
   font-family: sans-serif;
+  overflow: scroll;
 }

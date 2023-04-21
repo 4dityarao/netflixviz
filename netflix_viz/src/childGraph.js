@@ -39,15 +39,15 @@ class ChildGraph extends React.Component {
         decay: 1000
       },
       renderLinks: true,
-      linkColor: (link) => {if(link.value>1)
+      linkColor: (link) => {if(link.value>0.5)
         return "#c5fb61"
         else return "#f54e42"
         },
         nodeColor: (node) => {if(node.group>1){
-          return "#f54e42"
+          return "#2544f5"
         }
         },
-        nodeSize: (node)=>{if(node.group==1){return 1}else{return 0.5}},
+        nodeSize: (node)=>{if(node.group>1){return 1}else{return 0.5}},
         linkWidth: 0.8,
         linkArrows: false,
         linkVisibilityDistanceRange : [100, 1500],
@@ -64,13 +64,7 @@ class ChildGraph extends React.Component {
           onNodeMouseOver: (node)=>{
               // console.log('Hovered node: ', node);
               if (node!== undefined){
-                console.log('Hovered node: ', node.title);
-                this.setState(node);
-                let nodez = this.graph.getAdjacentNodes(node.id)
-                console.log(this.links);
-                let x = this.links.filter(x=>{return (x.source === node.id)})
-                this.setState({node:node,value:x})
-                console.log(x);
+                  this.changeSidebar(node)
               }
           
           },
@@ -88,7 +82,15 @@ class ChildGraph extends React.Component {
 
 
 
-
+changeSidebar = (node)=>{
+  console.log('Hovered node: ', node.title);
+  this.setState(node);
+  let nodez = this.graph.getAdjacentNodes(node.id)
+  console.log(this.links);
+  let x = this.links.filter(x=>{return (x.target === node.id)})
+  this.setState({node:node,value:x})
+  console.log(x);
+}
 
 runQuery = async(query)=>{
   let  session = await this.driver.session({database:"neo4j"});
@@ -117,8 +119,8 @@ runMovQuery = async(query)=>{
   let movies = new Object();
   let rec_movies = new Object();
   let links = res.records.map(r => {
-    //group 1 = movie, 2= cust
-  
+    //group 1 = watched_movies, 2= rec_movies
+
     rec_movies[r.get("movie2")] = r.get("m2Title");
     //movies.add(r.get("target"))
     movies[r.get("movie1")] = r.get("m1Title");
@@ -157,6 +159,13 @@ this.graph.setZoomLevel(10, [250])
 // let [movienodes, simlinks] = await this.runQuery()
 // this.graph.setData(movienodes,simlinks)
 }
+
+
+reset_graph = ()=>{
+this.graph.setData([],[])
+this.setState({node:{title:""},value:[]});
+
+}
 render(){
     return (    
       <div>
@@ -173,14 +182,15 @@ render(){
     >
       {this.state.node.title}
     </span>
-    {this.state.value.map((item) => (
-      <Typography variant="h6" component="div">
-         <TableRow key={item} style={{ border: "1px solid black", borderBottom: "1px solid black" }}>
+    <TableRow  style={{ border: "1px solid black", borderBottom: "1px solid black" }}>
           <TableCell sx={{ color: "white" }}><b>Movie Title</b></TableCell>
           <TableCell sx={{ color: "white" }}><b>Similarity(0-1)</b></TableCell>
         </TableRow>
+    {this.state.value.map((item) => (
+      <Typography variant="h6" component="div">
+
         <TableRow key={item} style={{ borderTop: "1px solid black", borderBottom: "1px solid black" }}>
-          <TableCell sx={{ color: "white" }}>{this.movie_dict[item.target]}</TableCell>
+          <TableCell sx={{ color: "white" }}>{this.movie_dict[item.source]}</TableCell>
           <TableCell sx={{ color: "white" }}>{item.value}</TableCell>
         </TableRow>
       </Typography>
