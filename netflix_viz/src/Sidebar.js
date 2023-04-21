@@ -28,8 +28,11 @@ constructor(props){
         display: "flex",
         flexDirection: "column",
         width: "25%",
-        height: "100%",
-        backgroundColor: "#000"
+        height: "70vh", // Set height to 70% of viewport height
+        backgroundColor: "#00000080",
+        overflowY: "scroll", // Add scrollable content
+        padding: "10px", // Add some padding for readability
+        borderBottom: "2px solid grey"
       },
     }}
     >
@@ -42,31 +45,31 @@ constructor(props){
           <MenuItem value="rec1">Recommender System 1</MenuItem>
           <MenuItem value="rec2">Recommender System 2</MenuItem>
 </Select>
-<Box sx={{ width:200 }}>
-          <Card sx={{ width:200, bgcolor: "#222222", color: "white"}}> <Typography variant="h6">
-        Selected Node
+<Box sx={{ width:"80%" }}>
+          <Card sx={{ width:"100%", bgcolor: "#222222", color: "white"}}> <Typography variant="h6">
+        Selected Node : 
+        {" "+this.state.node.id}
       </Typography>
-      <Typography variant="h5" component="div">
+      {/* <Typography variant="h5" component="div">
         {this.state.node.id}
-      </Typography>
+      </Typography> */}
       
       <Typography variant="h6" component="div">
         {this.state.node.title}
       </Typography>
       <Typography variant="h6" component="div" sx={{ color: "white" }}>
-        Neighbors
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ color: "white" }}>Customer ID</TableCell>
+                  <TableCell sx={{ color: "white",textAlign:"center",fontSize:"20px" }}>Adjacent Ids</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {this.state.neighbors.map(item => (
                   <TableRow key={item}>
-                    <TableCell sx={{ color: "white" }} onClick = { this.highlight}>{item}</TableCell>
-                  </TableRow>
+                  <TableCell class="link-cell" align="center" sx={{ color: "white"}} onClick={this.highlight}>{item}</TableCell>
+                </TableRow>
                 ))}
               </TableBody>
             </Table>
@@ -82,7 +85,7 @@ constructor(props){
 };
 changeNodeData(x, neighbors){
   console.log(x)
-  this.setState({"node": x, "neighbors":neighbors.map((x)=>x.id ).slice(0,10)});
+  this.setState({"node": x, "neighbors":neighbors.map((x)=>x.id).slice(0,20)});
   //render();
 
 };

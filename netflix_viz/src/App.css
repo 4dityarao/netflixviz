@@ -70,9 +70,9 @@ h1{
   width: 40%;
   height:40%;
   z-index: 1;
-  border: solid blue;
-  background-color: #61dafb;
+  border: solid gray;
+  background-color: #222222;
 }
 .nodedata{
-  color: #61dafb
+  color: #222222
 }

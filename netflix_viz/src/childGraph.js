@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './childGraph.css';
 import { Graph, GraphConfigInterface } from "@cosmograph/cosmos";
 import * as neo4j from  'neo4j-driver';
+import { Drawer, Select, MenuItem, Button, Card, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 class ChildGraph extends React.Component {
   
@@ -9,7 +10,7 @@ class ChildGraph extends React.Component {
     
     super(props);
     this.canvasRef = React.createRef();
-    
+    this.state = {node:{title:""},value:[]};
     this.driver = neo4j.driver(
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
@@ -25,6 +26,7 @@ class ChildGraph extends React.Component {
     this.nodes = null;
     this.links = null;
     this.graph = null;
+    this.movie_dict = null
   }
 
   componentDidMount = async()=> {
@@ -32,7 +34,7 @@ class ChildGraph extends React.Component {
     const canvas = this.canvasRef.current;
     const config = {
       simulation: {
-        repulsion: 0.2,
+        repulsion: 0.05,
         gravity: 0.1,
         decay: 1000
       },
@@ -61,7 +63,15 @@ class ChildGraph extends React.Component {
           // },
           onNodeMouseOver: (node)=>{
               // console.log('Hovered node: ', node);
-             
+              if (node!== undefined){
+                console.log('Hovered node: ', node.title);
+                this.setState(node);
+                let nodez = this.graph.getAdjacentNodes(node.id)
+                console.log(this.links);
+                let x = this.links.filter(x=>{return (x.source === node.id)})
+                this.setState({node:node,value:x})
+                console.log(x);
+              }
           
           },
           onmousemove: ()=>{
@@ -73,6 +83,7 @@ class ChildGraph extends React.Component {
 
     this.graph = new Graph(canvas, config);
     this.graph.fitView();
+   
   };
 
 
@@ -107,13 +118,18 @@ runMovQuery = async(query)=>{
   let rec_movies = new Object();
   let links = res.records.map(r => {
     //group 1 = movie, 2= cust
-    rec_movies[r.get("movie2")] = r.get("movie2");
+  
+    rec_movies[r.get("movie2")] = r.get("m2Title");
     //movies.add(r.get("target"))
-    movies[r.get("movie1")] = r.get("movie1");
+    movies[r.get("movie1")] = r.get("m1Title");
     return {"source":r.get("movie1"),"target":  r.get("movie2"),value:parseFloat(r.get("sim"))}});
   
-  let nodes = Array.from(Object.entries(movies)).map(([id,title]) =>{return {id: id,title:"title", group:1}})
-  .concat(Array.from(Object.entries(rec_movies)).map(([id,title]) =>{return {id: id,title:"title", group:2}}))
+  let nodes = Array.from(Object.entries(movies)).map(([id,title]) =>{return {id: id,title:title, group:1}})
+  .concat(Array.from(Object.entries(rec_movies)).map(([id,title]) =>{return {id: id,title:title, group:2}}))
+  this.movie_dict = nodes.reduce((acc,x)=>{
+    acc[x.id]= x.title;
+    return acc;
+  })
 
               
   return [nodes,links]
@@ -128,27 +144,51 @@ highlightGraphNode = (node_id)=>{
 }
 
 makeView = async(node, adjacent_nodes)=>{
-  let [movienodes, simlinks] = await this.runMovQuery(`match (c:Customer{id:${node.id}})-[r:RATED]-(m)
+[this.nodes, this.links] = await this.runMovQuery(`match (c:Customer{id:${node.id}})-[r:RATED]-(m)
 with distinct m as m1
 match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
 with distinct pred_movie as m2
 MATCH (m2:Movie)-[r:sim_rating ]-(m1:Movie)
-RETURN toString(m1.id) as movie1, toString(m2.id) as movie2, r.sim_rating  as sim order by r.sim_rating desc `)
-let x = movienodes.concat(adjacent_nodes)
-console.log(x)
-this.graph.setData(movienodes,simlinks);
+RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc `)
+this.nodes = this.nodes.concat(adjacent_nodes);
+this.graph.setData(this.nodes,this.links);
 this.graph.fitView();
+this.graph.setZoomLevel(10, [250])
 // let [movienodes, simlinks] = await this.runQuery()
 // this.graph.setData(movienodes,simlinks)
 }
 render(){
-    return (
-      
+    return (    
       <div>
-   
-    <canvas class = "graph" ref={this.canvasRef}/>
-
-    </div>
+  <canvas class="graph" ref={this.canvasRef} />
+  <div class="childMovieInfo">
+    <center>
+    <span
+      style={{
+        fontWeight: "bold",
+        textDecoration: "underline",
+        textAlign: "center",
+        fontSize: "25px",
+      }}
+    >
+      {this.state.node.title}
+    </span>
+    {this.state.value.map((item) => (
+      <Typography variant="h6" component="div">
+         <TableRow key={item} style={{ border: "1px solid black", borderBottom: "1px solid black" }}>
+          <TableCell sx={{ color: "white" }}><b>Movie Title</b></TableCell>
+          <TableCell sx={{ color: "white" }}><b>Similarity(0-1)</b></TableCell>
+        </TableRow>
+        <TableRow key={item} style={{ borderTop: "1px solid black", borderBottom: "1px solid black" }}>
+          <TableCell sx={{ color: "white" }}>{this.movie_dict[item.target]}</TableCell>
+          <TableCell sx={{ color: "white" }}>{item.value}</TableCell>
+        </TableRow>
+      </Typography>
+    ))}
+    </center>
+  </div>
+  
+</div>
     
     );
   }

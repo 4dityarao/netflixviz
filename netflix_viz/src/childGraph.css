@@ -66,3 +66,14 @@ h1{
 .nodedata{
   color: #61dafb
 }
+.childMovieInfo {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 25%; /* or any desired width */
+  height: 27%; /* or any desired height */
+  color: white;
+  border: 1px solid gray;
+  font-family: sans-serif;
+}
