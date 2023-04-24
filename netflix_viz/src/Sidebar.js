@@ -1,7 +1,7 @@
 import React from 'react';
 import './Sidebar.css';
 //import { Drawer, Select, MenuItem, Button,Card,Typography, Box} from '@mui/material';
-import { Drawer, Select, MenuItem, Button, Card, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Drawer, Select, MenuItem, Button, Card, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow , TextField} from '@mui/material';
 
 class Sidebar extends React.Component 
 {
@@ -40,11 +40,12 @@ constructor(props){
       <div>
         <center><img style = {{height: 100, width: 100 }}src = {require("./assets/logo.gif")}></img></center>
         <center><h1>Netflix Prize Recommendations</h1>
-        <Select label = "select graph.." default = 'init'sx = {{"minWidth": 120,"bgcolor": "grey"}} onChange = {this.sendQuery} >
+        <Select label = "select graph.." defaultValue = "init" sx = {{"minWidth": 120,"bgcolor": "grey"}} onChange = {this.sendQuery} >
           <MenuItem value="init">Initial Ratings</MenuItem>
           <MenuItem value="rec1">Recommender System 1</MenuItem>
           <MenuItem value="rec2">Recommender System 2</MenuItem>
 </Select>
+<TextField id="filled-basic" label="Node Search " variant="filled" onKeyDown= {this.highlight} sx = {{backgroundColor : "white"}}/>
 <Box sx={{ width:"80%" }}>
           <Card sx={{ width:"100%", bgcolor: "#222222", color: "white"}}> <Typography variant="h6">
         Selected Node : 
@@ -95,7 +96,15 @@ sendQuery = (event)=>{
   
 };
 highlight= (item)=>{
-  let x = item.currentTarget.innerHTML;
+  let x = null
+  if(item.keyCode==13){
+      x= item.target.value;
+    console.log("theses")
+  }
+  else{
+  x = item.currentTarget.innerHTML;
+  
+  }
   this.props.highlightNode(x);
 }
 }

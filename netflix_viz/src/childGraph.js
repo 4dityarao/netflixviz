@@ -15,7 +15,7 @@ class ChildGraph extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'qwerty123'
+        process.env.NEO4J_PASSWORD || 'password'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -93,7 +93,7 @@ changeSidebar = (node)=>{
 }
 
 runQuery = async(query)=>{
-  let  session = await this.driver.session({database:"neo4j"});
+  let  session = await this.driver.session({database:"moviedb"});
   let res  = await session.run(query);
   session.close();
   let movies = new Object();
@@ -112,7 +112,7 @@ runQuery = async(query)=>{
 
 runMovQuery = async(query)=>{
 
-  let  session = await this.driver.session({database:"neo4j"});
+  let  session = await this.driver.session({database:"moviedb"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()

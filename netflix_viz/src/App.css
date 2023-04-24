@@ -76,3 +76,33 @@ h1{
 .nodedata{
   color: #222222
 }
+
+.parentlegend{
+  position: absolute;
+  color: white;
+  background-color: #00000080 ;
+  right: 0;
+  width: 15%;
+  height:20%
+}
+.circle{
+  
+  border-radius: 50%;
+  width: 15px;
+  height:15px;
+  
+  display:inline-block;
+}
+
+.legendtext{
+  display:inline-block;
+   margin-left: 10px
+}
+.childlegend{
+  position: absolute;
+  color: white;
+  background-color: #00000080 ;
+  right: 0;
+  width: 20%;
+  height:10%
+}

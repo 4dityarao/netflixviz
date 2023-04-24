@@ -10,6 +10,7 @@ class App extends React.Component {
   constructor(props) {
     
     super(props);
+    this.state = {showChild:undefined}
     this.canvasRef = React.createRef();
     this.sidebarRef = React.createRef();
     this.childGraphRef = React.createRef();
@@ -18,7 +19,7 @@ class App extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'qwerty123'
+        process.env.NEO4J_PASSWORD || 'password'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -65,13 +66,16 @@ class App extends React.Component {
           this.sidebarRef.current.changeNodeData(node, this.graph.getAdjacentNodes(node.id).slice(1))
           if(node.group>1){ 
           this.childGraphRef.current.makeView(node, this.graph.getAdjacentNodes(node.id)) 
+          this.setState({showChild:undefined});
           }else{
             this.childGraphRef.current.reset_graph();
+            this.setState({showChild:"none"});
           }
           }
           else{
             this.graph.unselectNodes();
             this.childGraphRef.current.reset_graph();
+            this.setState({showChild:"none"});
           }
           this.graph.pause();
 
@@ -96,6 +100,7 @@ class App extends React.Component {
     // graph.setData(data1.nodes,data1.links);
     //graph = this.graph.bind(this)
     this.graph.fitView();
+    this.setState({showChild:"none"});
   };
 
 
@@ -111,7 +116,7 @@ runQuery = async(query =`MATCH (m:Movie)
                           }
 return source,target,rating,title` )=>{
 
-  let  session = await this.driver.session({database:"neo4j"});
+  let  session = await this.driver.session({database:"moviedb"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()
@@ -157,9 +162,9 @@ return source,target,rating,title`,
 };
 
 highlightGraphNode = (node_id)=>{
- 
-   this.graph.selectNodeById(node_id,true)
-   this.graph.zoomToNodeById(node_id,700,30)
+  if(node_id in this.nodes.map(x=>{return x.id}))
+{   this.graph.selectNodeById(node_id,true)
+   this.graph.zoomToNodeById(node_id,700,30)}
 }
 
 
@@ -167,14 +172,23 @@ render(){
     return (
       <div>
       <div id = "container">
-   
+      <div class = "parentlegend">
+        <h4>Legend</h4>
+   <div class = "circle" style={{backgroundColor:"#f54e42"}}></div><div class = "legendtext">User Nodes</div><br></br>
+    <div class = "circle"style={{backgroundColor:"#b3b3b3"}}></div><div class = "legendtext">Movie Nodes</div>
+</div>
     <canvas class = "graph" ref={this.canvasRef}/>
     </div>
-    <div class = "childgraph">
+    <div class = "childgraph"style = {{display:this.state.showChild}}>
+    <div class = "childlegend">
+        <h4>Legend</h4>
+   <div class = "circle" style={{backgroundColor:"#2544f5"}}></div><div class = "legendtext">Recommended Movie</div><br></br>
+   
+</div>
     <ChildGraph ref = {this.childGraphRef}/>
     </div>
-    
     <Sidebar highlightNode={this.highlightGraphNode} queryToParent = {this.getQuery} ref = {this.sidebarRef} data = {this.state}></Sidebar> 
+
     </div>
     
     
