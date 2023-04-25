@@ -128,10 +128,7 @@ runMovQuery = async(query)=>{
   
   let nodes = Array.from(Object.entries(movies)).map(([id,title]) =>{return {id: id,title:title, group:1}})
   .concat(Array.from(Object.entries(rec_movies)).map(([id,title]) =>{return {id: id,title:title, group:2}}))
-  this.movie_dict = nodes.reduce((acc,x)=>{
-    acc[x.id]= x.title;
-    return acc;
-  })
+
 
               
   return [nodes,links]
@@ -146,13 +143,27 @@ highlightGraphNode = (node_id)=>{
 }
 
 makeView = async(node, adjacent_nodes)=>{
-[this.nodes, this.links] = await this.runMovQuery(`match (c:Customer{id:${node.id}})-[r:RATED]-(m)
-with distinct m as m1
-match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
-with distinct pred_movie as m2
+
+[this.nodes, this.links] = await this.runMovQuery( `match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
+with collect(distinct pred_movie.id)  as pred_movs
 MATCH (m2:Movie)-[r:sim_rating ]-(m1:Movie)
-RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc `)
-this.nodes = this.nodes.concat(adjacent_nodes);
+where m2.id in pred_movs 
+RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc`
+)
+let [adj_nodes, adj_links]  = await this.runMovQuery(`match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
+with collect(distinct pred_movie.id)  as pred_movs, [${adjacent_nodes.map((x)=>{return x.id})}] as watched_movs
+MATCH (m2:Movie)-[r:sim_rating ]-(m1:Movie)
+where m2.id in pred_movs and m1.id in watched_movs 
+RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc`)
+if(adj_links.length>0){
+  this.nodes = this.nodes.concat(adj_nodes)
+  this.links = this.links.concat(adj_links)
+}
+if(this.nodes.length>0){
+  this.movie_dict = this.nodes.reduce((acc,x)=>{
+    acc[x.id]= x.title;
+    return acc;
+  })}
 this.graph.setData(this.nodes,this.links);
 this.graph.fitView();
 this.graph.setZoomLevel(10, [250])
