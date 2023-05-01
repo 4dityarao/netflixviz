@@ -15,7 +15,7 @@ class ChildGraph extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'password'
+        process.env.NEO4J_PASSWORD || 'qwerty123'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -93,7 +93,7 @@ changeSidebar = (node)=>{
 }
 
 runQuery = async(query)=>{
-  let  session = await this.driver.session({database:"moviedb"});
+  let  session = await this.driver.session({database:"neo4j"});
   let res  = await session.run(query);
   session.close();
   let movies = new Object();
@@ -112,7 +112,7 @@ runQuery = async(query)=>{
 
 runMovQuery = async(query)=>{
 
-  let  session = await this.driver.session({database:"moviedb"});
+  let  session = await this.driver.session({database:"neo4j"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()
@@ -145,20 +145,17 @@ highlightGraphNode = (node_id)=>{
 makeView = async(node, adjacent_nodes)=>{
 
 [this.nodes, this.links] = await this.runMovQuery( `match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
-with collect(distinct pred_movie.id)  as pred_movs
-MATCH (m2:Movie)-[r:sim_rating ]-(m1:Movie)
-where m2.id in pred_movs 
-RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc`
-)
-let [adj_nodes, adj_links]  = await this.runMovQuery(`match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
 with collect(distinct pred_movie.id)  as pred_movs, [${adjacent_nodes.map((x)=>{return x.id})}] as watched_movs
 MATCH (m2:Movie)-[r:sim_rating ]-(m1:Movie)
-where m2.id in pred_movs and m1.id in watched_movs 
-RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc`)
-if(adj_links.length>0){
-  this.nodes = this.nodes.concat(adj_nodes)
-  this.links = this.links.concat(adj_links)
-}
+where m2.id in pred_movs or (m2.id in pred_movs and m1.id in watched_movs)
+RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc`
+)
+// let [adj_nodes, adj_links]  = await this.runMovQuery(`match (:Customer{id:${node.id}})-[p:PREDICTED_RATING]-(pred_movie:Movie)
+// with collect(distinct pred_movie.id)  as pred_movs, [${adjacent_nodes.map((x)=>{return x.id})}] as watched_movs
+// MATCH (m2:Movie)-[r:sim_rating ]-(m1:Movie)
+// where m2.id in pred_movs and m1.id in watched_movs 
+// RETURN toString(m1.id) as movie1,toString(m1.title) as m1Title, toString(m2.id) as movie2,toString(m2.title) as m2Title, r.sim_rating  as sim order by r.sim_rating desc`)
+
 if(this.nodes.length>0){
   this.movie_dict = this.nodes.reduce((acc,x)=>{
     acc[x.id]= x.title;

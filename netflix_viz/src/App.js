@@ -19,7 +19,7 @@ class App extends React.Component {
       process.env.NEO4J_URI || 'bolt://localhost:7687',
       neo4j.auth.basic(
         process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'password'
+        process.env.NEO4J_PASSWORD || 'qwerty123'
       ),
       {
         encrypted: process.env.NEO4J_ENCRYPTED ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF',
@@ -40,7 +40,7 @@ class App extends React.Component {
         //repulsion: 2,
         // linkDistance: 1,
        // linkSpring: 2,
-        repulsion: 0.2,
+        repulsion: 0.4,
         gravity: 0.1,
         decay: 1000
       },
@@ -112,11 +112,11 @@ runQuery = async(query =`MATCH (m:Movie)
                               WITH m
                               with distinct m as movs
                               MATCH (c:Customer)-[r]-(movs)
-                          RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 10
+                          RETURN toString(movs.id) as target,toString(c.id) as source, r.rating as rating, toString(movs.title) as title limit 30
                           }
 return source,target,rating,title` )=>{
 
-  let  session = await this.driver.session({database:"moviedb"});
+  let  session = await this.driver.session({database:"neo4j"});
   let res  = await session.run(query);
   session.close();
   //let movies = new Set()
@@ -162,7 +162,7 @@ return source,target,rating,title`,
 };
 
 highlightGraphNode = (node_id)=>{
-  if(node_id in this.nodes.map(x=>{return x.id}))
+  if(this.nodes.map(x=>{if (node_id === x.id){return true}}))
 {   this.graph.selectNodeById(node_id,true)
    this.graph.zoomToNodeById(node_id,700,30)}
 }

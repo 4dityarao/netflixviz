@@ -1,0 +1,12 @@
+3864 : Batman Begins - Adjacent node - 1058034
+633647 : Node with child graph has initial node
+
+Points to cover:
+1. Explain the inital Graph, the node, movie and color of links
+2. Explain the side bar, the dropdown, and name of the movie
+3. Explain the  Adjacent ids and show we can go to any id we want to
+4. Expalin the search bar, how it can be used
+5. Select a movie id and explain the data
+6. Select a customer node- Explain the child graph with the multiple nodes
+7. Show the Recommended view. Explain how it was found.
+8. Show the same for 1-2 more movie.

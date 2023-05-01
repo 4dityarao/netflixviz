@@ -43,7 +43,6 @@ constructor(props){
         <Select label = "select graph.." defaultValue = "init" sx = {{"minWidth": 120,"bgcolor": "grey"}} onChange = {this.sendQuery} >
           <MenuItem value="init">Initial Ratings</MenuItem>
           <MenuItem value="rec1">Recommender System 1</MenuItem>
-          <MenuItem value="rec2">Recommender System 2</MenuItem>
 </Select>
 <TextField id="filled-basic" label="Node Search " variant="filled" onKeyDown= {this.highlight} sx = {{backgroundColor : "white"}}/>
 <Box sx={{ width:"80%" }}>
