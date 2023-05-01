@@ -1,0 +1,33 @@
+.MuiPaper-root{
+
+    background-color: #000
+  }
+
+.link-cell {
+text-decoration: none;
+color: white;
+cursor: pointer;
+text-align: center;
+}
+
+.link-cell:hover {
+text-decoration: underline;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+

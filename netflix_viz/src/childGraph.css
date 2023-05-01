@@ -59,50 +59,23 @@ h1{
   background-color: #fff8f800;
 }
 #container{
-  display: flex;
-  flex-direction: column;
-  z-index: 0;
-}
-.childgraph{
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 40%;
-  height:40%;
-  z-index: 1;
-  border: solid gray;
-  background-color: #222222;
+  /* display: flex;
+  flex-direction: column; */
+  position: relative;
 }
 .nodedata{
-  color: #222222
+  color: #61dafb
 }
-
-.parentlegend{
-  position: absolute;
+.childMovieInfo {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-top:1px grey;
+  width: 26%; /* or any desired width */
+  height: 27%; /* or any desired height */
   color: white;
-  background-color: #00000080 ;
-  right: 0;
-  width: 15%;
-  height:20%
-}
-.circle{
-  
-  border-radius: 50%;
-  width: 15px;
-  height:15px;
-  
-  display:inline-block;
-}
-
-.legendtext{
-  display:inline-block;
-   margin-left: 10px
-}
-.childlegend{
-  position: absolute;
-  color: white;
-  background-color: #00000080 ;
-  right: 0;
-  width: 20%;
-  height:10%
+  border: 1px solid gray;
+  font-family: sans-serif;
+  overflow: scroll;
 }
